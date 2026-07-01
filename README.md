@@ -74,9 +74,8 @@ Open [http://localhost:3000](http://localhost:3000)
 ## Example Questions to Try
 
 ```
-Where is my order?
 Show me all orders for sarah.johnson@outlook.com
-Can I cancel order #5?
+Can I cancel order 5?
 What orders are currently being shipped?
 Do I have any refund requests?
 Show all open support tickets

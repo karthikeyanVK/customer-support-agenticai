@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Setup
+
+```bash
+npm install
+cp .env.example .env.local   # then fill in Azure OpenAI credentials
+npx prisma migrate dev
+npx prisma db seed
+npm run dev
+```
+
 ## Commands
 
 ```bash
@@ -14,8 +24,6 @@ npx prisma migrate dev    # Apply migrations + regenerate client
 npx prisma db seed        # Seed with sample data (ts-node)
 npx prisma studio         # Browse the SQLite DB in a GUI
 ```
-
-**Environment:** Copy `.env.example` → `.env.local` and fill in Azure OpenAI credentials before running.
 
 ## Architecture
 

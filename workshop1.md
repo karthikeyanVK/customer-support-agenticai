@@ -4,13 +4,38 @@ Use these during the live demo to show both what works and where the naive singl
 
 ---
 
+## Setup
+
+```bash
+npm install
+```
+
+Rename `.env.example` to `.env` and fill in your Azure OpenAI credentials from the details given to you:
+
+```bash
+# Windows
+rename .env.example .env
+
+# Mac/Linux
+mv .env.example .env
+```
+
+Then:
+
+```bash
+npx prisma migrate dev
+npx prisma db seed
+npm run dev
+```
+
+---
+
 ## Good Questions (These Should Work)
 
 These questions exercise the agent against real seeded data.
 
 ```
 Show me all orders for sarah.johnson@outlook.com
-What is the status of order #5?
 Show me all orders that are currently shipped
 Do I have any refund requests?
 Show all open support tickets
