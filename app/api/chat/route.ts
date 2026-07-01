@@ -2,12 +2,16 @@
 // Receives a single message + sessionId, invokes the LangGraph agent, streams the response.
 
 import { NextRequest } from "next/server";
-import { HumanMessage } from "@langchain/core/messages";
+import { HumanMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
 import { graph } from "@/agent/graph";
-import { ChatRequest } from "@/types/chat";
+import { ChatRequest, Message } from "@/types/chat";
 
 export async function POST(req: NextRequest) {
-  const { message, sessionId }: ChatRequest = await req.json();
+  const { messages }: ChatRequest = await req.json();
+
+  const lcMessages: BaseMessage[] = messages.map((m: Message) =>
+    m.role === "user" ? new HumanMessage(m.content) : new AIMessage(m.content)
+  );
 
   // Stream the response token-by-token
   const stream = new ReadableStream({
@@ -17,8 +21,8 @@ export async function POST(req: NextRequest) {
       try {
         // streamEvents lets us tap into the LLM token stream from the graph
         const eventStream = graph.streamEvents(
-          { messages: [new HumanMessage(message)] },
-          { version: "v2", configurable: { thread_id: sessionId } }
+          { messages: lcMessages },
+          { version: "v2", configurable: { thread_id: crypto.randomUUID() } }
         );
 
         let hasStreamed = false;
