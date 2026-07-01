@@ -1,0 +1,75 @@
+// Prisma schema for Workshop 1 — AI Customer Support Agent
+// SQLite for simplicity (no external DB needed)
+// Note: SQLite does not support enums, so we use String with comments for valid values.
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model Customer {
+  id        Int    @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String @unique
+  phone     String
+
+  orders         Order[]
+  supportTickets SupportTicket[]
+}
+
+model Product {
+  id       Int    @id @default(autoincrement())
+  name     String
+  category String
+  price    Float
+
+  orders Order[]
+}
+
+model Order {
+  id               Int      @id @default(autoincrement())
+  customerId       Int
+  productId        Int
+  quantity         Int
+  totalAmount      Float
+  // status: Pending | Packed | Shipped | OutForDelivery | Delivered | Cancelled
+  status           String   @default("Pending")
+  orderedAt        DateTime
+  expectedDelivery DateTime
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+  refunds  Refund[]
+}
+
+model Refund {
+  id      Int    @id @default(autoincrement())
+  orderId Int
+  amount  Float
+  // status: Requested | Approved | Rejected | Completed
+  status  String @default("Requested")
+  reason  String
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model SupportTicket {
+  id          Int      @id @default(autoincrement())
+  customerId  Int
+  subject     String
+  description String
+  // priority: Low | Medium | High
+  priority    String   @default("Medium")
+  // status: Open | InProgress | Closed
+  status      String   @default("Open")
+  createdAt   DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id])
+}
