@@ -1,18 +1,13 @@
 // POST /api/chat
-// Receives conversation history, invokes the LangGraph agent, streams the response.
+// Receives a single message + sessionId, invokes the LangGraph agent, streams the response.
 
 import { NextRequest } from "next/server";
-import { HumanMessage, AIMessage } from "@langchain/core/messages";
+import { HumanMessage } from "@langchain/core/messages";
 import { graph } from "@/agent/graph";
 import { ChatRequest } from "@/types/chat";
 
 export async function POST(req: NextRequest) {
-  const { messages }: ChatRequest = await req.json();
-
-  // Convert our simple Message[] into LangChain message objects
-  const langchainMessages = messages.map((m) =>
-    m.role === "user" ? new HumanMessage(m.content) : new AIMessage(m.content)
-  );
+  const { message, sessionId }: ChatRequest = await req.json();
 
   // Stream the response token-by-token
   const stream = new ReadableStream({
@@ -22,17 +17,31 @@ export async function POST(req: NextRequest) {
       try {
         // streamEvents lets us tap into the LLM token stream from the graph
         const eventStream = graph.streamEvents(
-          { messages: langchainMessages },
-          { version: "v2" }
+          { messages: [new HumanMessage(message)] },
+          { version: "v2", configurable: { thread_id: sessionId } }
         );
 
+        let hasStreamed = false;
+        let finalMessages: { content: unknown }[] = [];
+
         for await (const event of eventStream) {
-          // on_chat_model_stream fires for each token from the LLM
           if (
             event.event === "on_chat_model_stream" &&
             event.data?.chunk?.content
           ) {
+            hasStreamed = true;
             controller.enqueue(encoder.encode(event.data.chunk.content));
+          }
+          if (event.event === "on_chain_end" && event.name === "LangGraph") {
+            finalMessages = event.data?.output?.messages ?? [];
+          }
+        }
+
+        // Guardrail blocked — no LLM stream fires; send guardrail message directly
+        if (!hasStreamed && finalMessages.length > 0) {
+          const last = finalMessages[finalMessages.length - 1];
+          if (last?.content) {
+            controller.enqueue(encoder.encode(String(last.content)));
           }
         }
       } catch (err) {
