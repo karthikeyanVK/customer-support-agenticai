@@ -6,7 +6,7 @@
 // This is the "naive" approach — intentionally simple to show limitations.
 // Workshop 2 will refactor this into a planner + specialised tool-calling agents.
 
-import { StateGraph, START, END, MessagesAnnotation } from "@langchain/langgraph";
+import { StateGraph, START, END, MessagesAnnotation, MemorySaver } from "@langchain/langgraph";
 import { SystemMessage } from "@langchain/core/messages";
 import { prisma } from "@/lib/prisma";
 import { llm } from "@/agent/llm";
@@ -93,4 +93,4 @@ const workflow = new StateGraph(MessagesAnnotation)
   .addEdge(START, "customerSupportAgent")
   .addEdge("customerSupportAgent", END);
 
-export const graph = workflow.compile();
+export const graph = workflow.compile({ checkpointer: new MemorySaver() });
