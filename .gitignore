@@ -17,3 +17,4 @@ prisma/dev.db-journal
 # misc
 .DS_Store
 *.pem
+prisma/prisma/dev.db

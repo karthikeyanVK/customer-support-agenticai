@@ -117,6 +117,11 @@ async function main() {
   await prisma.product.deleteMany();
   await prisma.customer.deleteMany();
 
+  // Reset SQLite autoincrement counters so IDs start from 1 on every seed
+  await prisma.$executeRawUnsafe(
+    `DELETE FROM sqlite_sequence WHERE name IN ('Customer','Product','Order','Refund','SupportTicket')`
+  );
+
   // ─── Customers ──────────────────────────────────────────────────────────────
   const customers = await Promise.all(
     customerData.map((c) => prisma.customer.create({ data: c }))
